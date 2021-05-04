@@ -2,6 +2,7 @@
 using Microsoft.AnalysisServices.AdomdClient;
 using Newtonsoft.Json;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 
@@ -12,15 +13,13 @@ namespace ExportOfflineCubeNetFramework
     {
         static void Main(string[] args)
         {
-
             try
             {
+                var param = paramsInit(args);
 
-                var param = paramsInit(ref args);
-               
-                Console.WriteLine(string.Format("Creating Offline cube for [{0}]/[{1}]", param.dbName, param.cubeName));
-                GenerateofflineCube(param.server, param.dbName, param.cubeName, param.fileName, true);
-               
+                Console.WriteLine(string.Format("\n Creating Offline cube for [{0}]/[{1}]", param["dbName"], param["cubeName"]));
+                GenerateofflineCube(param["server"], param["dbName"],param["cubeName"],param["fileName"], true);
+
             }
 
             catch (Exception ex)
@@ -31,33 +30,31 @@ namespace ExportOfflineCubeNetFramework
             }
         }
 
+
+
         // This method initialize parmas from args, json file or defauld config
-        public static Params paramsInit(ref string[] args)
+        public static Dictionary<string, string> paramsInit(string[] args)
         {
+            var paramValues = new Dictionary<string, string>();
             // Params from agrs
             if (args.Length == 4)
             {
-                var paramsFromArgs = new Params();
-                paramsFromArgs.server = args[0];
-                paramsFromArgs.dbName = args[1];
-                paramsFromArgs.cubeName = args[2];
-                paramsFromArgs.fileName = args[3];
+                paramValues["server"] = args[0];
+                paramValues["dbName"] = args[1];
+                paramValues["cubeName"] = args[2];
+                paramValues["fileName"] = args[3];
                 Console.WriteLine("Parameter from agruments are being used.");
-                return paramsFromArgs;
+                return paramValues;
             }
 
             // Params from JSON file
             if (File.Exists("CubeParams.json"))
             {
-                var paramsFromJson = deSerializeFromJson();
-                if (paramsFromJson.cubeName != null && paramsFromJson.fileName != null && paramsFromJson.dbName != null && paramsFromJson.server != null)
+                paramValues = deSerializeFromJson();
+                if (paramValues["cubeName"] != null && paramValues["fileName"] != null && paramValues["dbName"] != null && paramValues["server"] != null)
                 {
-                    paramsFromJson.server = paramsFromJson.server;
-                    paramsFromJson.dbName = paramsFromJson.dbName;
-                    paramsFromJson.cubeName = paramsFromJson.cubeName;
-                    paramsFromJson.fileName = paramsFromJson.fileName;
                     Console.WriteLine("Parameter from JSON file are being used.");
-                    return paramsFromJson;
+                    return paramValues;
                 }
             }
 
@@ -77,13 +74,12 @@ namespace ExportOfflineCubeNetFramework
 
             // Test params
             Console.WriteLine("Tests parameter are being used.");
-            return new Params
-            {
-                server = "MAXIMEGAGNE96DA\\MSSQLSSAS",
-                dbName = "MySecondCube",
-                cubeName = "MyCube",
-                fileName = @"C:\Users\maximegagne\Documents\OfflineCube\"
-            };          
+            paramValues["server"] = @"MAXIMEGAGNE96DA\MSSQLSSAS";
+            paramValues["dbName"] = "MySecondCube";
+            paramValues["cubeName"] = "MyCube";
+            paramValues["fileName"] = @"C:\Users\maximegagne\Documents\OfflineCube\";
+
+            return paramValues;         
         }
 
 
@@ -138,22 +134,18 @@ namespace ExportOfflineCubeNetFramework
                 isRunning = false;
             } while (isRunning);
 
-
-            
-
-
             return param;
         }
 
 
 
         // This method Serialize to JSON File
-        public static bool serializeToJSON(Params param)
+        public static bool serializeToJSON(Dictionary<string, string> param)
         {
             try
             {
                 // serialize JSON to a string and then write string to a file
-                var cubeParams = Newtonsoft.Json.JsonConvert.SerializeObject(param);
+                var cubeParams = JsonConvert.SerializeObject(param);
 
                 // serialize JSON directly to a file
                 File.WriteAllText("CubeParams.json", cubeParams);
@@ -168,10 +160,10 @@ namespace ExportOfflineCubeNetFramework
         }
 
         // This method check if the json file contains data and DeSerialize them
-        public static Params deSerializeFromJson()
+        public static Dictionary<string, string> deSerializeFromJson()
         {
             string json = File.ReadAllText("CubeParams.json");
-            var param = Newtonsoft.Json.JsonConvert.DeserializeObject<Params>(json);
+            var param = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
             return param;
         }
 
