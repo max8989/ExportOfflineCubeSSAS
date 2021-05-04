@@ -19,7 +19,6 @@ namespace ExportOfflineCubeNetFramework
 
                 Console.WriteLine(string.Format("\n Creating Offline cube for [{0}]/[{1}]", param["dbName"], param["cubeName"]));
                 GenerateofflineCube(param["server"], param["dbName"],param["cubeName"],param["fileName"], true);
-
             }
 
             catch (Exception ex)
