@@ -1,8 +1,10 @@
 ﻿using Microsoft.AnalysisServices;
 using Microsoft.AnalysisServices.AdomdClient;
+using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Xml;
+
 
 namespace ExportOfflineCubeNetFramework
 {
@@ -10,27 +12,15 @@ namespace ExportOfflineCubeNetFramework
     {
         static void Main(string[] args)
         {
-            
-            string server = "MAXIMEGAGNE96DA\\MSSQLSSAS";
-            string dbName = "MySecondCube";
-            string cubeName = "MyCube";
-            string fileName = "C:\\Users\\maximegagne\\Documents\\OfflineCube\\";
+
             try
             {
-                //if (args.Length != 4)
-                //{
-                //    throw new Exception("The program requires 4 argumens: SSAS Server name, SSAS database name, cube name, offline cube file name (full path) ");
-                //}
-                //string server = args[0];
-                //string dbName = args[1];
-                //string cubeName = args[2];
-                //string fileName = args[3];
 
-                if(parameterValidation(server, dbName, cubeName, fileName))
-                {
-                    Console.WriteLine(string.Format("Creating Offline cube for [{0}]/[{1}]", dbName, cubeName));
-                    GenerateofflineCube(server, dbName, cubeName, fileName, true);
-                }
+                var param = paramsInit(ref args);
+               
+                Console.WriteLine(string.Format("Creating Offline cube for [{0}]/[{1}]", param.dbName, param.cubeName));
+                GenerateofflineCube(param.server, param.dbName, param.cubeName, param.fileName, true);
+               
             }
 
             catch (Exception ex)
@@ -41,11 +31,150 @@ namespace ExportOfflineCubeNetFramework
             }
         }
 
-        // This method verify if all parameter are correct
-        public static bool parameterValidation(string server, string dbName, string cubeName, string path)
+        // This method initialize parmas from args, json file or defauld config
+        public static Params paramsInit(ref string[] args)
         {
-            return true;
+            // Params from agrs
+            if (args.Length == 4)
+            {
+                var paramsFromArgs = new Params();
+                paramsFromArgs.server = args[0];
+                paramsFromArgs.dbName = args[1];
+                paramsFromArgs.cubeName = args[2];
+                paramsFromArgs.fileName = args[3];
+                Console.WriteLine("Parameter from agruments are being used.");
+                return paramsFromArgs;
+            }
+
+            // Params from JSON file
+            if (File.Exists("CubeParams.json"))
+            {
+                var paramsFromJson = deSerializeFromJson();
+                if (paramsFromJson.cubeName != null && paramsFromJson.fileName != null && paramsFromJson.dbName != null && paramsFromJson.server != null)
+                {
+                    paramsFromJson.server = paramsFromJson.server;
+                    paramsFromJson.dbName = paramsFromJson.dbName;
+                    paramsFromJson.cubeName = paramsFromJson.cubeName;
+                    paramsFromJson.fileName = paramsFromJson.fileName;
+                    Console.WriteLine("Parameter from JSON file are being used.");
+                    return paramsFromJson;
+                }
+            }
+
+
+            // Params from default config
+            //var paramsFromInitialConfig = initialConfig();
+            //if (paramsFromInitialConfig.cubeName != null && paramsFromInitialConfig.dbName != null && paramsFromInitialConfig.server != null && paramsFromInitialConfig.fileName != null)
+            //{
+            //    server = paramsFromInitialConfig.server;
+            //    dbName = paramsFromInitialConfig.dbName;
+            //    cubeName = paramsFromInitialConfig.cubeName;
+            //    path = paramsFromInitialConfig.fileName;
+            //    serializeToJSON(paramsFromInitialConfig);
+            //    Console.WriteLine("Parameter from initial config are being used and saved to 'CubeParams.json' .");
+            //    return paramsFromInitialConfig;
+            //}
+
+            // Test params
+            Console.WriteLine("Tests parameter are being used.");
+            return new Params
+            {
+                server = "MAXIMEGAGNE96DA\\MSSQLSSAS",
+                dbName = "MySecondCube",
+                cubeName = "MyCube",
+                fileName = @"C:\Users\maximegagne\Documents\OfflineCube\"
+            };          
         }
+
+
+
+        // This method verify if all parameter are correct
+        public static Params initialConfig()
+        {
+            Params param = new Params();
+            param.server = null;
+            param.dbName = null;
+            param.cubeName = null;
+            param.fileName = null;
+            bool isRunning = false;
+
+
+            do
+            {
+                if (param.server is null)
+                {
+                    Console.WriteLine("Please enter the server name");
+                    param.server = Console.ReadLine();
+                    Console.WriteLine("The server name you entered: {0}", param.server);
+                    Console.WriteLine();
+                }
+
+                if (param.dbName is null)
+                {
+                    Console.WriteLine("Please enter the database name");
+                    param.dbName = Console.ReadLine();
+                    Console.WriteLine("The database name you entered: {0}", param.dbName);
+                    Console.WriteLine();
+                }
+
+                if (param.cubeName is null)
+                {
+                    Console.WriteLine("Please enter the cube name");
+                    param.cubeName = Console.ReadLine();
+                    Console.WriteLine("The cube name you entered: {0}", param.cubeName);
+                    Console.WriteLine();
+                }
+
+                if (param.fileName is null)
+                {
+                    Console.WriteLine("Please enter the path for the file");
+                    param.fileName = Console.ReadLine();
+                    Console.WriteLine("The path you entered: {0}", param.fileName);
+                    Console.WriteLine();
+                }
+
+                
+
+                isRunning = false;
+            } while (isRunning);
+
+
+            
+
+
+            return param;
+        }
+
+
+
+        // This method Serialize to JSON File
+        public static bool serializeToJSON(Params param)
+        {
+            try
+            {
+                // serialize JSON to a string and then write string to a file
+                var cubeParams = Newtonsoft.Json.JsonConvert.SerializeObject(param);
+
+                // serialize JSON directly to a file
+                File.WriteAllText("CubeParams.json", cubeParams);
+                Console.WriteLine("Initial Parameter saved to CubeParams.json");
+                return true;
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+        // This method check if the json file contains data and DeSerialize them
+        public static Params deSerializeFromJson()
+        {
+            string json = File.ReadAllText("CubeParams.json");
+            var param = Newtonsoft.Json.JsonConvert.DeserializeObject<Params>(json);
+            return param;
+        }
+
 
         // This method generate an offline Cube
         public static bool GenerateofflineCube(string server, string dbName, string cubeName, string path, bool removeTranslations)
