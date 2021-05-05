@@ -91,11 +91,13 @@ namespace ExportOfflineCubeNetFramework
             param.dbName = null;
             param.cubeName = null;
             param.fileName = null;
-            bool isRunning = false;
+            bool isRunning;
+           
 
 
             do
             {
+                isRunning = true;
                 if (param.server is null)
                 {
                     Console.WriteLine("Please enter the server name");
@@ -128,9 +130,40 @@ namespace ExportOfflineCubeNetFramework
                     Console.WriteLine();
                 }
 
-                
+                if (param.server != null && param.dbName != null && param.cubeName != null && param.fileName != null)
+                {
+                    try
+                    {
+                        //AdomdConnection con = new AdomdConnection();
+                        Server s = new Server();
 
-                isRunning = false;
+                        s.Connect(param.server);
+
+                        var dbObj = s.Databases.FindByName(param.dbName);
+                        if (dbObj == null) 
+                        {
+                            isRunning = true;
+                            string.Format("Database not found: {0}", param.dbName);
+                            param.dbName = null;
+                        }
+                        var cubeObj = dbObj.Cubes.FindByName(param.cubeName);
+                        if (cubeObj == null) 
+                        {
+                            isRunning = true;
+                            string.Format("Cube not found: {0}", param.cubeName);
+                            param.cubeName = null;
+                        }
+                        isRunning = false;
+                    }
+                    catch (Exception e)
+                    {
+                        isRunning = true;
+                        Console.WriteLine("Error: " + e);
+                        Console.WriteLine("Try again");
+                    }
+
+                }
+
             } while (isRunning);
 
             return param;
