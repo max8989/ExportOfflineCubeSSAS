@@ -19,10 +19,8 @@ namespace ExportOfflineCubeNetFramework
             }
             try
             {
-                //var param = paramsInit(args);
 
-                //Console.WriteLine(string.Format("\n Creating Offline cube for [{0}]/[{1}]", param["dbName"], param["cubeName"]));
-                //GenerateofflineCube(param["server"], param["dbName"],param["cubeName"],param["fileName"], true);
+                //CreateJsonCubeConfig();
 
                 GenerateAllOfflineCubeFromJson();
                 Console.WriteLine("Press Enter to end!");
@@ -37,7 +35,107 @@ namespace ExportOfflineCubeNetFramework
             }
         }
 
+        public static bool CreateJsonCubeConfig()
+        {
+            try
+            {
+                var cubeParams = new Dictionary<string, string>();
+                bool isRunning;
 
+                do
+                {
+                    isRunning = true;
+                    cubeParams["server"] = "";
+                    cubeParams["dbName"] = "";
+                    cubeParams["cubeName"] = "";
+                    cubeParams["fileName"] = "";
+
+                    Console.WriteLine("Type 'exit' to Aboard Operation\n");
+
+                    if (cubeParams["server"] == "")
+                    {
+                        Console.Write("Please enter the server name: ");
+                        cubeParams["server"] = Console.ReadLine();
+                        if (cubeParams["server"].ToLower() == "exit") return false;
+                        Console.WriteLine("The server name you entered: {0}", cubeParams["server"]);
+                        Console.WriteLine();
+                    }
+
+                    if (cubeParams["dbName"] == "")
+                    {
+                        Console.Write("Please enter the database name: ");
+                        cubeParams["dbName"] = Console.ReadLine();
+                        if (cubeParams["dbName"].ToLower() == "exit") return false;
+                        Console.WriteLine("The database name you entered: {0}", cubeParams["dbName"]);
+                        Console.WriteLine();
+                    }
+
+                    if (cubeParams["cubeName"] == "")
+                    {
+                        Console.Write("Please enter the cube name: ");
+                        cubeParams["cubeName"] = Console.ReadLine();
+                        if (cubeParams["cubeName"].ToLower() == "exit") return false;
+                        Console.WriteLine("The cube name you entered: {0}", cubeParams["cubeName"]);
+                        Console.WriteLine();
+                    }
+
+                    if (cubeParams["fileName"] == "")
+                    {
+                        Console.Write("Please enter the path for the file: ");
+                        cubeParams["fileName"] = Console.ReadLine();
+                        if (cubeParams["fileName"].ToLower() == "exit") return false;
+                        Console.WriteLine("The path you entered: {0}", cubeParams["fileName"]);
+                        Console.WriteLine();
+                    }
+
+                    if (cubeParams["server"] != "" && cubeParams["dbName"] != "" && cubeParams["cubeName"] != "" && cubeParams["fileName"] != "")
+                    {
+                        try
+                        {
+                            Console.WriteLine("Testing Connection\n");
+                            //AdomdConnection con = new AdomdConnection();
+                            Server s = new Server();
+
+                            s.Connect(cubeParams["server"]);
+
+                            var dbObj = s.Databases.FindByName(cubeParams["dbName"]);
+                            if (dbObj == null)
+                            {
+                                isRunning = true;
+                                string.Format("Database not found: {0}", cubeParams["dbName"]);
+                                cubeParams["dbName"] = null;
+                            }
+                            var cubeObj = dbObj.Cubes.FindByName(cubeParams["cubeName"]);
+                            if (cubeObj == null)
+                            {
+                                isRunning = true;
+                                string.Format("Cube not found: {0}", cubeParams["cubeName"]);
+                                cubeParams["cubeName"] = null;
+                            }
+                            isRunning = false;
+                        }
+                        catch (Exception e)
+                        {
+                            isRunning = true;
+                            Console.WriteLine("Error: " + e);
+                            Console.WriteLine("Try again");
+                        }
+
+                    }
+
+                } while (isRunning);
+
+                SerializeToJSON(cubeParams);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message + "\n");
+                return false;
+                //throw ex;
+            }
+           
+        }
 
 
         // This method Generate all offline cube from the JSON files
@@ -48,7 +146,7 @@ namespace ExportOfflineCubeNetFramework
 
             if (JsonFiles.Count < 1)
             {
-                Console.WriteLine("No Json files");
+                Console.WriteLine("No Json files found");
                 return;
             }
 
@@ -233,7 +331,7 @@ namespace ExportOfflineCubeNetFramework
 
                 // serialize JSON directly to a file
                 File.WriteAllText($"{param["dbName"]}_{param["cubeName"]}_Offline.json", cubeParams);
-                Console.WriteLine("Initial Parameter saved to CubeParams.json");
+                Console.WriteLine($"Initial Parameter saved to {param["dbName"]}_{param["cubeName"]}_Offline.json");
                 return true;
             }
             catch (Exception)
