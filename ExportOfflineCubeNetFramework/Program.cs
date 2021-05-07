@@ -37,9 +37,13 @@ namespace ExportOfflineCubeNetFramework
             }
         }
 
+
+
+
         // This method Generate all offline cube from the JSON files
         public static void GenerateAllOfflineCubeFromJson()
         {
+            var ErrorMessages = new List<string>();
             var JsonFiles = GetAllJsonFiles();
 
             if (JsonFiles.Count < 1)
@@ -52,19 +56,38 @@ namespace ExportOfflineCubeNetFramework
 
             foreach (var jsonfile in JsonFiles)
             {
-                cubeParams = deSerializeFromJson(jsonfile);
-                Console.WriteLine(string.Format("\nCreating Offline cube for [{0}]/[{1}]",
-                                    cubeParams["dbName"],
-                                    cubeParams["cubeName"]));
+                try
+                {
+                    cubeParams = DeserializeFromJson(jsonfile);
+                    //if (cubeParams["server"] == "Error") continue;
 
-                GenerateofflineCube(cubeParams["server"],
-                                    cubeParams["dbName"],
-                                    cubeParams["cubeName"],
-                                    cubeParams["fileName"],
-                                    true);
+                    Console.WriteLine(string.Format("\nCreating Offline cube for [{0}]/[{1}]",
+                                        cubeParams["dbName"],
+                                        cubeParams["cubeName"]));
 
+                    GenerateofflineCube(cubeParams["server"],
+                                        cubeParams["dbName"],
+                                        cubeParams["cubeName"],
+                                        cubeParams["fileName"],
+                                        true);
+                }
+                catch (Exception ex)
+                {
+                    ErrorMessages.Add($"Json File: {jsonfile} ,\nError: {ex.Message}\n");
+                    //throw ex;
+                }
             }
+            if(ErrorMessages.Count != 0)
+            {
+                Console.WriteLine("\n==================Error Messages==================");
+                foreach (var errorMessage in ErrorMessages)
+                {
+                    Console.WriteLine(errorMessage);
+                }
+            }
+            
         }
+
 
         // This method initialize parmas from args, json file or defauld config
         public static Dictionary<string, string> paramsInit(string[] args)
@@ -82,15 +105,15 @@ namespace ExportOfflineCubeNetFramework
             }
 
             // Params from JSON file
-            if (File.Exists("CubeParams.json"))
-            {
-                paramValues = deSerializeFromJson("CubeParams.json");
-                if (paramValues["cubeName"] != null && paramValues["fileName"] != null && paramValues["dbName"] != null && paramValues["server"] != null)
-                {
-                    Console.WriteLine("Parameter from JSON file are being used.");
-                    return paramValues;
-                }
-            }
+            //if (File.Exists("CubeParams.json"))
+            //{
+            //    paramValues = deSerializeFromJson("CubeParams.json");
+            //    if (paramValues["cubeName"] != null && paramValues["fileName"] != null && paramValues["dbName"] != null && paramValues["server"] != null)
+            //    {
+            //        Console.WriteLine("Parameter from JSON file are being used.");
+            //        return paramValues;
+            //    }
+            //}
 
 
             // Params from default config
@@ -112,7 +135,7 @@ namespace ExportOfflineCubeNetFramework
             paramValues["dbName"] = "MyPracticeCube";
             paramValues["cubeName"] = "MyPracticeCube";
             paramValues["fileName"] = @"C:\Users\maximegagne\Documents\OfflineCube\";
-            serializeToJSON(paramValues);
+            SerializeToJSON(paramValues);
             return paramValues;         
         }
 
@@ -201,7 +224,7 @@ namespace ExportOfflineCubeNetFramework
 
 
         // This method Serialize to JSON File
-        public static bool serializeToJSON(Dictionary<string, string> param)
+        public static bool SerializeToJSON(Dictionary<string, string> param)
         {
             try
             {
@@ -220,11 +243,19 @@ namespace ExportOfflineCubeNetFramework
         }
 
         // This method check if the json file contains data and DeSerialize them
-        public static Dictionary<string, string> deSerializeFromJson(string jsonCube)
+        public static Dictionary<string, string> DeserializeFromJson(string jsonCube)
         {
-            string json = File.ReadAllText(jsonCube);
-            var cube = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-            return cube;
+            try
+            {
+                string json = File.ReadAllText(jsonCube);
+                var cube = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+                return cube;
+            }
+            catch (Exception e)
+            {
+                throw e;
+            }
+            
         }
 
 
@@ -345,7 +376,7 @@ namespace ExportOfflineCubeNetFramework
             {
                 result = false;
                 Console.WriteLine($"Error cannot create cube for {dbName} {cubeName}, {e.Message} ");
-                //throw e;
+                throw e;
             }
             finally
             {
