@@ -51,7 +51,7 @@ namespace ExportOfflineCubeNetFramework
             // Params from JSON file
             if (File.Exists("CubeParams.json"))
             {
-                paramValues = deSerializeFromJson();
+                paramValues = deSerializeFromJson("CubeParams.json");
                 if (paramValues["cubeName"] != null && paramValues["fileName"] != null && paramValues["dbName"] != null && paramValues["server"] != null)
                 {
                     Console.WriteLine("Parameter from JSON file are being used.");
@@ -76,8 +76,8 @@ namespace ExportOfflineCubeNetFramework
             // Test params
             Console.WriteLine("Tests parameter are being used.");
             paramValues["server"] = @"MAXIMEGAGNE96DA\MSSQLSSAS";
-            paramValues["dbName"] = "MySecondCube";
-            paramValues["cubeName"] = "MyCube";
+            paramValues["dbName"] = "MyPracticeCube";
+            paramValues["cubeName"] = "MyPracticeCube";
             paramValues["fileName"] = @"C:\Users\maximegagne\Documents\OfflineCube\";
             serializeToJSON(paramValues);
             return paramValues;         
@@ -86,74 +86,68 @@ namespace ExportOfflineCubeNetFramework
 
 
         // This method verify if all parameter are correct
-        public static Params initialConfig()
+        public static Dictionary<string, string> initialConfig()
         {
-            Params param = new Params();
-            param.server = null;
-            param.dbName = null;
-            param.cubeName = null;
-            param.fileName = null;
+            var param = new Dictionary<string, string>();
             bool isRunning;
-           
-
 
             do
             {
                 isRunning = true;
-                if (param.server is null)
+                if (param["server"] is null)
                 {
                     Console.WriteLine("Please enter the server name");
-                    param.server = Console.ReadLine();
-                    Console.WriteLine("The server name you entered: {0}", param.server);
+                    param["server"] = Console.ReadLine();
+                    Console.WriteLine("The server name you entered: {0}", param["server"]);
                     Console.WriteLine();
                 }
 
-                if (param.dbName is null)
+                if (param["dbName"] is null)
                 {
                     Console.WriteLine("Please enter the database name");
-                    param.dbName = Console.ReadLine();
-                    Console.WriteLine("The database name you entered: {0}", param.dbName);
+                    param["dbName"] = Console.ReadLine();
+                    Console.WriteLine("The database name you entered: {0}", param["dbName"]);
                     Console.WriteLine();
                 }
 
-                if (param.cubeName is null)
+                if (param["cubeName"] is null)
                 {
                     Console.WriteLine("Please enter the cube name");
-                    param.cubeName = Console.ReadLine();
-                    Console.WriteLine("The cube name you entered: {0}", param.cubeName);
+                    param["cubeName"] = Console.ReadLine();
+                    Console.WriteLine("The cube name you entered: {0}", param["cubeName"]);
                     Console.WriteLine();
                 }
 
-                if (param.fileName is null)
+                if (param["fileName"] is null)
                 {
                     Console.WriteLine("Please enter the path for the file");
-                    param.fileName = Console.ReadLine();
-                    Console.WriteLine("The path you entered: {0}", param.fileName);
+                    param["fileName"] = Console.ReadLine();
+                    Console.WriteLine("The path you entered: {0}", param["fileName"]);
                     Console.WriteLine();
                 }
 
-                if (param.server != null && param.dbName != null && param.cubeName != null && param.fileName != null)
+                if (param["server"] != null && param["dbName"] != null && param["cubeName"] != null && param["fileName"] != null)
                 {
                     try
                     {
                         //AdomdConnection con = new AdomdConnection();
                         Server s = new Server();
 
-                        s.Connect(param.server);
+                        s.Connect(param["server"]);
 
-                        var dbObj = s.Databases.FindByName(param.dbName);
+                        var dbObj = s.Databases.FindByName(param["dbName"]);
                         if (dbObj == null) 
                         {
                             isRunning = true;
-                            string.Format("Database not found: {0}", param.dbName);
-                            param.dbName = null;
+                            string.Format("Database not found: {0}", param["dbName"]);
+                            param["dbName"] = null;
                         }
-                        var cubeObj = dbObj.Cubes.FindByName(param.cubeName);
+                        var cubeObj = dbObj.Cubes.FindByName(param["cubeName"]);
                         if (cubeObj == null) 
                         {
                             isRunning = true;
-                            string.Format("Cube not found: {0}", param.cubeName);
-                            param.cubeName = null;
+                            string.Format("Cube not found: {0}", param["cubeName"]);
+                            param["cubeName"] = null;
                         }
                         isRunning = false;
                     }
@@ -182,7 +176,7 @@ namespace ExportOfflineCubeNetFramework
                 var cubeParams = JsonConvert.SerializeObject(param);
 
                 // serialize JSON directly to a file
-                File.WriteAllText("CubeParams.json", cubeParams);
+                File.WriteAllText($"{param["dbName"]}_{param["cubeName"]}_Offline.json", cubeParams);
                 Console.WriteLine("Initial Parameter saved to CubeParams.json");
                 return true;
             }
@@ -193,11 +187,16 @@ namespace ExportOfflineCubeNetFramework
         }
 
         // This method check if the json file contains data and DeSerialize them
-        public static Dictionary<string, string> deSerializeFromJson()
+        public static Dictionary<string, string> deSerializeFromJson(string jsonCube)
         {
-            string json = File.ReadAllText("CubeParams.json");
-            var param = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
-            return param;
+            string json = File.ReadAllText(jsonCube);
+            var cube = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
+            return cube;
+        }
+
+        public static List<string> GetAllJsonFile()
+        {
+            return new List<string>() { "" };
         }
 
 
