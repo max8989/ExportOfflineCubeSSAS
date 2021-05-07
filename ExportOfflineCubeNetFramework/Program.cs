@@ -19,10 +19,14 @@ namespace ExportOfflineCubeNetFramework
             }
             try
             {
-                var param = paramsInit(args);
+                //var param = paramsInit(args);
 
-                Console.WriteLine(string.Format("\n Creating Offline cube for [{0}]/[{1}]", param["dbName"], param["cubeName"]));
-                GenerateofflineCube(param["server"], param["dbName"],param["cubeName"],param["fileName"], true);
+                //Console.WriteLine(string.Format("\n Creating Offline cube for [{0}]/[{1}]", param["dbName"], param["cubeName"]));
+                //GenerateofflineCube(param["server"], param["dbName"],param["cubeName"],param["fileName"], true);
+
+                GenerateAllOfflineCubeFromJson();
+                Console.WriteLine("Press Enter to end!");
+                var _ = Console.ReadLine();
             }
 
             catch (Exception ex)
@@ -30,6 +34,35 @@ namespace ExportOfflineCubeNetFramework
                 Console.WriteLine("Generating offline cube failed:");
                 Console.WriteLine(ex.Message);
                 throw ex;
+            }
+        }
+
+        // This method Generate all offline cube from the JSON files
+        public static void GenerateAllOfflineCubeFromJson()
+        {
+            var JsonFiles = GetAllJsonFiles();
+
+            if (JsonFiles.Count < 1)
+            {
+                Console.WriteLine("No Json files");
+                return;
+            }
+
+            var cubeParams = new Dictionary<string, string>();
+
+            foreach (var jsonfile in JsonFiles)
+            {
+                cubeParams = deSerializeFromJson(jsonfile);
+                Console.WriteLine(string.Format("\nCreating Offline cube for [{0}]/[{1}]",
+                                    cubeParams["dbName"],
+                                    cubeParams["cubeName"]));
+
+                GenerateofflineCube(cubeParams["server"],
+                                    cubeParams["dbName"],
+                                    cubeParams["cubeName"],
+                                    cubeParams["fileName"],
+                                    true);
+
             }
         }
 
@@ -194,13 +227,6 @@ namespace ExportOfflineCubeNetFramework
             return cube;
         }
 
-        public static List<string> GetAllJsonFile()
-        {
-            return new List<string>() { "" };
-        }
-
-
-
 
         // This method generate an offline Cube
         public static bool GenerateofflineCube(string server, string dbName, string cubeName, string path, bool removeTranslations)
@@ -212,7 +238,7 @@ namespace ExportOfflineCubeNetFramework
 
             String dateFileName = string.Format("{0}_{1}", fileName, DateTime.Now.ToString("yyyyMMdd_HHmm"));
             string xmlaFile = Path.Combine(dir, dateFileName + ".xmla");
-            string cubFile = Path.Combine(dir, dateFileName + ".cub");
+            string cubFile = Path.Combine(dir, dbName + "_" + cubeName + dateFileName + ".cub");
             AdomdConnection con = new AdomdConnection();
             Server s = new Server();
             //Server s2 = new Server();
@@ -318,7 +344,8 @@ namespace ExportOfflineCubeNetFramework
             catch (AdomdException e)
             {
                 result = false;
-                throw e;
+                Console.WriteLine($"Error cannot create cube for {dbName} {cubeName}, {e.Message} ");
+                //throw e;
             }
             finally
             {
@@ -329,24 +356,23 @@ namespace ExportOfflineCubeNetFramework
             }
             Console.WriteLine(string.Format("Offline cube created: {0}", cubFile));
 
-            Console.WriteLine("Press Enter to end!");
-            var _ = Console.ReadLine();
+            
             return result;   
         }
 
 
 
-        public string GetAllJsonFiles()
+        public static List<string> GetAllJsonFiles()
         {
-            DirectoryInfo d = new DirectoryInfo(@"D:\Test");//Assuming Test is your Folder
+            var list = new List<string>();
+            DirectoryInfo d = new DirectoryInfo(".");//Assuming Test is your Folder
             FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
-            string str = "";
             foreach (FileInfo file in Files)
             {
-                str = str + ", " + file.Name;
+                list.Add(file.Name);
             }
 
-            return str;
+            return list;
         }
 
 
