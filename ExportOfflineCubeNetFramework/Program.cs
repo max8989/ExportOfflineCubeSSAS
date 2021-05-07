@@ -200,6 +200,8 @@ namespace ExportOfflineCubeNetFramework
         }
 
 
+
+
         // This method generate an offline Cube
         public static bool GenerateofflineCube(string server, string dbName, string cubeName, string path, bool removeTranslations)
         {
@@ -331,6 +333,22 @@ namespace ExportOfflineCubeNetFramework
             var _ = Console.ReadLine();
             return result;   
         }
+
+
+
+        public string GetAllJsonFiles()
+        {
+            DirectoryInfo d = new DirectoryInfo(@"D:\Test");//Assuming Test is your Folder
+            FileInfo[] Files = d.GetFiles("*.json"); //Getting Text files
+            string str = "";
+            foreach (FileInfo file in Files)
+            {
+                str = str + ", " + file.Name;
+            }
+
+            return str;
+        }
+
 
     }
 }
