@@ -13,6 +13,10 @@ namespace ExportOfflineCubeNetFramework
     {
         static void Main(string[] args)
         {
+            foreach (var item in args)
+            {
+                Console.WriteLine(item);
+            }
             try
             {
                 var param = paramsInit(args);
@@ -28,8 +32,6 @@ namespace ExportOfflineCubeNetFramework
                 throw ex;
             }
         }
-
-
 
         // This method initialize parmas from args, json file or defauld config
         public static Dictionary<string, string> paramsInit(string[] args)
@@ -77,7 +79,7 @@ namespace ExportOfflineCubeNetFramework
             paramValues["dbName"] = "MySecondCube";
             paramValues["cubeName"] = "MyCube";
             paramValues["fileName"] = @"C:\Users\maximegagne\Documents\OfflineCube\";
-
+            serializeToJSON(paramValues);
             return paramValues;         
         }
 
@@ -153,7 +155,6 @@ namespace ExportOfflineCubeNetFramework
             }
             catch (Exception)
             {
-
                 throw;
             }
         }
