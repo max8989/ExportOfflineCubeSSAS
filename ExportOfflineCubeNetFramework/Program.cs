@@ -138,6 +138,24 @@ namespace ExportOfflineCubeNetFramework
         }
 
 
+        public static bool WriteLog(string strFileName, string strMessage)
+        {
+            try
+            {
+                FileStream objFilestream = new FileStream(string.Format("{0}\\{1}", Path.GetTempPath(), strFileName), FileMode.Append, FileAccess.Write);
+                StreamWriter objStreamWriter = new StreamWriter((Stream)objFilestream);
+                objStreamWriter.WriteLine(strMessage);
+                objStreamWriter.Close();
+                objFilestream.Close();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+        }
+
+
         // This method Generate all offline cube from the JSON files
         public static void GenerateAllOfflineCubeFromJson()
         {
@@ -171,7 +189,7 @@ namespace ExportOfflineCubeNetFramework
                 }
                 catch (Exception ex)
                 {
-                    ErrorMessages.Add($"Json File: {jsonfile} ,\nError: {ex.Message}\n");
+                    ErrorMessages.Add($"Json File: {jsonfile} ,\nError: {ex.Message} at {DateTime.Now}\n");
                     //throw ex;
                 }
             }
@@ -181,6 +199,7 @@ namespace ExportOfflineCubeNetFramework
                 foreach (var errorMessage in ErrorMessages)
                 {
                     Console.WriteLine(errorMessage);
+                    WriteLog("OfflineCubeError.log", errorMessage);
                 }
             }
             
