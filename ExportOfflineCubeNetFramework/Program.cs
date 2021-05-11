@@ -514,7 +514,7 @@ namespace ExportOfflineCubeNetFramework
                 cubFile, DateTime.Now,stopwatch.Elapsed.ToString("hh\\:mm\\.ss")));
 
             WriteLog("OfflineCube.log", string.Format("Offline cube created: {0} at {1} in {2}\n",
-                DateTime.Now, cubFile, stopwatch.Elapsed.ToString("hh\\:mm\\.ss")));
+                 cubFile, DateTime.Now, stopwatch.Elapsed.ToString("hh\\:mm\\.ss")));
             
             return result;   
         }
