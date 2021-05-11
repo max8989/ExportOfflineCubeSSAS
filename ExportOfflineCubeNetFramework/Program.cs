@@ -4,7 +4,9 @@ using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Timers;
 using System.Xml;
+using System.Diagnostics;
 
 
 namespace ExportOfflineCubeNetFramework
@@ -161,6 +163,8 @@ namespace ExportOfflineCubeNetFramework
         {
             var ErrorMessages = new List<string>();
             var JsonFiles = GetAllJsonFiles();
+            
+            
 
             if (JsonFiles.Count < 1)
             {
@@ -175,7 +179,6 @@ namespace ExportOfflineCubeNetFramework
                 try
                 {
                     cubeParams = DeserializeFromJson(jsonfile);
-                    //if (cubeParams["server"] == "Error") continue;
 
                     Console.WriteLine(string.Format("\nCreating Offline cube for [{0}]/[{1}]",
                                         cubeParams["dbName"],
@@ -186,6 +189,7 @@ namespace ExportOfflineCubeNetFramework
                                         cubeParams["cubeName"],
                                         cubeParams["fileName"],
                                         true);
+
                 }
                 catch (Exception ex)
                 {
@@ -199,7 +203,7 @@ namespace ExportOfflineCubeNetFramework
                 foreach (var errorMessage in ErrorMessages)
                 {
                     Console.WriteLine(errorMessage);
-                    WriteLog("OfflineCubeError.log", errorMessage);
+                    WriteLog("OfflineCube.log", errorMessage);
                 }
             }
             
@@ -379,6 +383,8 @@ namespace ExportOfflineCubeNetFramework
         // This method generate an offline Cube
         public static bool GenerateofflineCube(string server, string dbName, string cubeName, string path, bool removeTranslations)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
             bool result = false;
             var fileName = Path.GetFileNameWithoutExtension(path);
             var dir = Path.GetDirectoryName(path);
@@ -501,9 +507,14 @@ namespace ExportOfflineCubeNetFramework
                 s.Disconnect();
                 // clean up
                 if (File.Exists(xmlaFile)) File.Delete(xmlaFile);
+                stopwatch.Stop();
+               
             }
-            Console.WriteLine(string.Format("Offline cube created: {0}", cubFile));
+            Console.WriteLine(string.Format("Offline cube created: {0} at {1} in {2}\n",
+                cubFile, DateTime.Now,stopwatch.Elapsed.ToString("hh\\:mm\\.ss")));
 
+            WriteLog("OfflineCube.log", string.Format("Offline cube created: {0} at {1} in {2}\n",
+                DateTime.Now, cubFile, stopwatch.Elapsed.ToString("hh\\:mm\\.ss")));
             
             return result;   
         }
